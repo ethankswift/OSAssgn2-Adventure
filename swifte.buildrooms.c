@@ -30,11 +30,11 @@ void author(struct room * rooms) {
 	mkdir(dirname, 0777);
 // making the files
 	for (i = 0; i < 7; i++) {
-		sprintf(fname, "%s/%s'S_HALL", dirname, titles[i]);
+		sprintf(fname, "%s/%s", dirname, titles[i]);
 		scribe = fopen (fname,"w");
-		fprintf (scribe, "ROOM NAME: %s'S_HALL\n", titles[i]);
+		fprintf (scribe, "ROOM NAME: %s\n", titles[i]);
 		for (j = 0; j < rooms[i].connNum; j++) {
-			fprintf (scribe, "CONNECTION %d: %s'S_HALL\n", j+1, titles[rooms[i].conns[j]]);
+			fprintf (scribe, "CONNECTION %d: %s\n", j+1, titles[rooms[i].conns[j]]);
 		}
 		if (rooms[i].roomType == 1)
 			fprintf (scribe, "ROOM TYPE: START_ROOM\n");
