@@ -6,14 +6,17 @@
 #include "sys/stat.h"
 #include "time.h"
 
+//data storage for the room object
 struct room
 {
 	int roomType, roomID, connNum;
 	int conns[6];
 };
 
+//names for the rooms
 const char * titles[] = { "ODIN", "THOR", "FREYA", "TYR", "NJORD","BALDR", "LOKI" };
 
+//function to write the file, takes a pointer to the array of room structs
 void author(struct room * rooms) {
 	int pid = getpid();
 	char dirname[32];
@@ -31,12 +34,19 @@ void author(struct room * rooms) {
 		scribe = fopen (fname,"w");
 		fprintf (scribe, "ROOM NAME: %s'S_HALL\n", titles[i]);
 		for (j = 0; j < rooms[i].connNum; j++) {
-			fprintf (scribe, "CONNECTION %d: %s'S_HALL\n", j, titles[rooms[i].conns[j]]);
+			fprintf (scribe, "CONNECTION %d: %s'S_HALL\n", j+1, titles[rooms[i].conns[j]]);
 		}
+		if (rooms[i].roomType == 1)
+			fprintf (scribe, "ROOM TYPE: START_ROOM\n");
+		else if (rooms[i].roomType == 2)
+			fprintf (scribe, "ROOM TYPE: END_ROOM\n");
+		else
+			fprintf (scribe, "ROOM TYPE: MID_ROOM\n");
 	}
-
+	fclose(scribe);
 }
 
+//this function checks if there is an adequate number of connections at each node
 int IsGraphFull(struct room * rooms) {
 	int i, check;
 	check = 0;
@@ -51,11 +61,13 @@ int IsGraphFull(struct room * rooms) {
 		return 0;
 }
 
+//returns a random node from the graph
 struct room GetRandomRoom(struct room * rooms){
 	srand(time(0));
 	return rooms[(rand() % 7)];
 }
 
+//adds a single random new connection to the graph
 void AddRandom(struct room * rooms) {
 	struct room a;
 	struct room b;
@@ -72,13 +84,12 @@ void AddRandom(struct room * rooms) {
 		b = GetRandomRoom(rooms);
 	} while ( CanAddFrom(b) == 0 || AreSame(a,b) == 1 || ConnExists(a,b) == 1 );
 
-	printf("connecting %d and %d\n", a.roomID, b.roomID);	
-
+//actual connection happens here
 	Connect(rooms, a, b);
 	
 }
 
-
+//checks the number of connections from a node
 int CanAddFrom(struct room a){
 	if (a.connNum > 5)
 		return 0;
@@ -86,6 +97,7 @@ int CanAddFrom(struct room a){
 		return 1;
 }
 
+//checks if a specific connection exists
 int ConnExists(struct room a, struct room b) {
 	int i;
 	for (i = 0; i < 6; i++) {
@@ -96,6 +108,7 @@ int ConnExists(struct room a, struct room b) {
 	return 0;
 }
 
+//function that takes a pointer to the original array of structs and adds the new connection
 int Connect(struct room * rooms, struct room a, struct room b) {
 	rooms[a.roomID].conns[rooms[a.roomID].connNum] = b.roomID;
 	rooms[b.roomID].conns[rooms[b.roomID].connNum] = a.roomID;
@@ -104,6 +117,7 @@ int Connect(struct room * rooms, struct room a, struct room b) {
 	rooms[b.roomID].connNum++;
 }
 
+//checks if two nodes are the same node
 int AreSame(struct room a, struct room b) {
 	return a.roomID == b.roomID;
 }
@@ -112,7 +126,7 @@ int main() {
 	int i, j;
 	struct room rooms[7];
 
-
+//initializing empty rooms
 	for (i = 0; i < 7; i++) {
 		rooms[i].roomID = i;
 		rooms[i].roomType = 0;
@@ -122,11 +136,20 @@ int main() {
 		}
 	}
 
-
+//fills connections until done
 	while (IsGraphFull(rooms) == 0) {
-		printf("adding one more random connection\n");
 		AddRandom(rooms);
 	}
-	author(rooms);
 
+//select two random different numbers to be the start and end
+	i = rand()%7;
+	do {
+	j = rand()%7;
+	} while (i == j);
+//assigns start and end
+	rooms[i].roomType = 1;
+	rooms[j].roomType = 2;	
+//writes the directory and files
+	author(rooms);
+return 0;
 }
